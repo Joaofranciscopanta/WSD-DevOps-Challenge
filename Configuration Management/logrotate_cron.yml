@@ -1,0 +1,11 @@
+---
+- name: cron_logrotate
+  hosts: all
+  become: yes
+  tasks:
+    - name: logrotate
+      cron:
+        name: "Logrotate cron job"
+        minute: "*/10"
+        hour: "2-3"
+        job: "/usr/sbin/logrotate /etc/logrotate.conf"

@@ -1,0 +1,23 @@
+---
+- name: deploy_ntp
+  hosts: ntp_servers
+  become: yes #sudo
+  tasks:
+    - name: create_ntp
+      ansible.builtin.package:
+        name: ntp
+        state: present
+
+    - name: move_ntp
+      ansible.builtin.copy:
+        src: ntpd.conf #Depends on your file location, its in local folder in this case.
+        dest: /etc/ntpd.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: restart_ntp
+      ansible.builtin.service:
+        name: ntpd
+        state: restarted
+        enabled: yes

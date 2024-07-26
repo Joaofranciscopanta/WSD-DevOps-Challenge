@@ -1,0 +1,45 @@
+{{- $appname := .Values.global.name -}}
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ $appname }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ $appname | quote }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ $appname | quote }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9200
+    - name: transport
+      protocol: TCP
+      port: 9300
+    - name: metrics
+      port: 9114
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Values.deployment.serviceName }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ $appname | quote }}
+spec:
+  type: ClusterIP
+  clusterIP: None  # Necessary for StatefulSet to resolve hostnames like elasticsearch-0
+  publishNotReadyAddresses: true  # Allow service to have endpoints even if pods aren't ready
+  selector:
+    app: {{ $appname | quote }}
+  ports:
+    - name: http
+      port: 9200
+    - name: transport
+      port: 9300
+    - name: metrics
+      port: 9114

@@ -1,0 +1,36 @@
+---
+- name: deploy_nagios_templates
+  hosts: nagios_server
+  become: yes #sudo
+  tasks:
+    - name: install_nagios
+      ansible.builtin.package:
+        name: nagios
+        state: present
+
+    - name: create_configure_nagios
+      ansible.builtin.copy:
+        dest: /etc/nagios/conf.d/hosts.cfg
+        content: |
+          {% for host in groups['ntp_servers'] %}
+          define host {
+            host_name {{ host }}
+            address {{ hostvars[host].ansible_host }}
+            check_command check-ping
+            active_checks_enabled 1
+            passive_checks_enabled 1
+          }
+
+          define service {
+            service_description ntp_process
+            host_name {{ host }}
+            check_command check_ntp
+            check_interval 10
+          }
+          {% endfor %}
+
+    - name: restart_nagios
+      ansible.builtin.service:
+        name: nagios
+        state: restarted
+        enabled: yes

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "elasticsearch.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ include "elasticsearch.name" . }}
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: {{ include "elasticsearch.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "elasticsearch.name" . }}
+    spec:
+      containers:
+        - name: elasticsearch
+          image: {{ .Values.deployment.containers.images }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9200
+              name: http
+            - containerPort: 9300
+              name: transport
+          env:
+            - name: node.name
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: cluster.initial_master_nodes
+              value: {{ .Values.deployment.clusterNodes }}
+            - name: discovery.seed_hosts
+              value: {{ .Values.deployment.serviceName }}
+            - name: cluster.name
+              value: {{ .Values.global.name }}
+            - name: network.host
+              value: "0.0.0.0"
+            - name: ES_JAVA_OPTS
+              value: "-Xmx1g -Xms1g"
+          resources:
+            requests:
+              cpu: {{ .Values.deployment.containers.resources.requests.cpu | quote }}
+              memory: {{ .Values.deployment.containers.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.deployment.containers.resources.limits.cpu | quote }}
+              memory: {{ .Values.deployment.containers.resources.limits.memory }}
+          volumeMounts:
+            - name: storage
+              mountPath: /usr/share/elasticsearch/data
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: {{ include "elasticsearch.fullname" . }}-pvc
