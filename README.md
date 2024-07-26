@@ -1,8 +1,5 @@
 # WSD-DevOps-Challenge
 
-
-# WSD-DevOps-Challenge
-
 Questions:
 
 Configuration management:
